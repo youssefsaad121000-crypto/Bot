@@ -2,8 +2,8 @@ const mineflayer = require('mineflayer');
 
 const bot = mineflayer.createBot({
   host: 'cookiesmp.pro',
-  port: 25565,
-  username: 'AFK_Bot_' + Math.floor(Math.random() * 100000),
+  port: 19132,
+  username: 'eneenfox' + Math.floor(Math.random() * 100000),
   auth: 'offline',
   version: '1.21.11'
 });
