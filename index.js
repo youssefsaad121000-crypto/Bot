@@ -23,7 +23,7 @@ bot.on('spawn', async () => {
   await sleep(3000);
 
   // تسجيل الحساب
-  bot.chat('/register 123yyyuuu 123yyyuuu');
+  bot.chat('/login Funymath057356244');
 
   console.log('Register command sent.');
 
