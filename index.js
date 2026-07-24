@@ -36,11 +36,16 @@ function createBot() {
       await sleep(500);
       bot.chat(`/login ${PASSWORD}`);
     }
+
+    if (text.includes('successfully logged in')) {
+      console.log('Login confirmed, now safe to continue.');
+      // هنا تقدر تبدأ خطواتك بعد التأكد من الدخول
+    }
   });
 
   bot.on('spawn', async () => {
     console.log('Spawned');
-    // هنا الأفضل تربط الخطوات برسالة نجاح الدخول بدل sleep ثابت
+    // الأفضل تربط الخطوات برسالة تسجيل الدخول بدل sleep ثابت
   });
 
   bot.on('windowOpen', async (window) => {
@@ -69,12 +74,17 @@ function createBot() {
     console.log('AFK enabled');
   });
 
-  bot.on('kicked', reason => {
-    console.log('Kicked:', reason);
+  bot.on('kicked', (reason) => {
+    // السبب ممكن يكون object، نحوله لنص
+    const reasonText = typeof reason === 'string'
+      ? reason
+      : JSON.stringify(reason);
 
-    // لو السبب واضح إنه خطأ دائم، ما تعيدش الاتصال
-    if (reason.toLowerCase().includes('wrong password') ||
-        reason.toLowerCase().includes('banned')) {
+    console.log('Kicked:', reasonText);
+
+    // لو السبب دائم، ما تعيدش الاتصال
+    if (reasonText.toLowerCase().includes('wrong password') ||
+        reasonText.toLowerCase().includes('banned')) {
       console.log('Permanent issue detected, not reconnecting.');
       return;
     }
