@@ -29,7 +29,7 @@ bot.on('messagestr', async (msg) => {
 
   if (text.includes('login')) {
     await sleep(500);
-    bot.chat(`/login Funymath057356244);
+    bot.chat('/login Funymath057356244');
   }
 });
 
