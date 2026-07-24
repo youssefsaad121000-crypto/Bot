@@ -5,7 +5,7 @@ const bot = mineflayer.createBot({
   port: 19132,
   username: 'eneenfox' + Math.floor(Math.random() * 100000),
   auth: 'offline',
-  version: '1.21.11'
+  version: '1.21.1'
 });
 
 function sleep(ms) {
