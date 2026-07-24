@@ -2,7 +2,7 @@ const mineflayer = require('mineflayer');
 
 const bot = mineflayer.createBot({
   host: 'cookiesmp.pro',
-  port: 19132,
+  port: 25565,
   username: 'eneenfox' + Math.floor(Math.random() * 100000),
   auth: 'offline',
   version: '1.21.1'
