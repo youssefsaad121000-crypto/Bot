@@ -10,6 +10,8 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+let reconnecting = false;
+
 function createBot() {
   const bot = mineflayer.createBot({
     host: HOST,
@@ -22,7 +24,7 @@ function createBot() {
   let openedMenu = false;
 
   bot.on('messagestr', async (msg) => {
-    console.log(msg);
+    console.log('[Server]:', msg);
     const text = msg.toLowerCase();
 
     if (text.includes('register')) {
@@ -38,16 +40,7 @@ function createBot() {
 
   bot.on('spawn', async () => {
     console.log('Spawned');
-
-    await sleep(4000);
-
-    // اختيار الخانة الرابعة
-    bot.setQuickBarSlot(3);
-
-    await sleep(500);
-
-    // كليك يمين بالشمعة
-    bot.activateItem();
+    // هنا الأفضل تربط الخطوات برسالة نجاح الدخول بدل sleep ثابت
   });
 
   bot.on('windowOpen', async (window) => {
@@ -78,6 +71,22 @@ function createBot() {
 
   bot.on('kicked', reason => {
     console.log('Kicked:', reason);
+
+    // لو السبب واضح إنه خطأ دائم، ما تعيدش الاتصال
+    if (reason.toLowerCase().includes('wrong password') ||
+        reason.toLowerCase().includes('banned')) {
+      console.log('Permanent issue detected, not reconnecting.');
+      return;
+    }
+
+    if (!reconnecting) {
+      reconnecting = true;
+      console.log('Reconnecting in 10 seconds...');
+      setTimeout(() => {
+        reconnecting = false;
+        createBot();
+      }, 10000);
+    }
   });
 
   bot.on('error', err => {
@@ -85,8 +94,15 @@ function createBot() {
   });
 
   bot.on('end', () => {
-    console.log('Disconnected... reconnecting in 5 seconds');
-    setTimeout(createBot, 5000);
+    console.log('Disconnected');
+    if (!reconnecting) {
+      reconnecting = true;
+      console.log('Reconnecting in 10 seconds...');
+      setTimeout(() => {
+        reconnecting = false;
+        createBot();
+      }, 10000);
+    }
   });
 }
 
