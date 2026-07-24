@@ -1,101 +1,94 @@
 const mineflayer = require('mineflayer');
 
 const PASSWORD = 'Funymath057356244';
-
-const bot = mineflayer.createBot({
-  host: 'cookiesmp.pro',
-  port: 25565,
-  username: 'eneenfox',
-  auth: 'offline',
-  version: '1.21.1'
-});
+const HOST = 'cookiesmp.pro';
+const PORT = 25565;
+const USERNAME = 'eneenfox';
+const VERSION = '1.21.1';
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-let openedMenu = false;
-let joinedSurvival = false;
+function createBot() {
+  const bot = mineflayer.createBot({
+    host: HOST,
+    port: PORT,
+    username: USERNAME,
+    auth: 'offline',
+    version: VERSION
+  });
 
-bot.on('messagestr', async (msg) => {
-  console.log(msg);
+  let openedMenu = false;
 
-  const text = msg.toLowerCase();
+  bot.on('messagestr', async (msg) => {
+    console.log(msg);
+    const text = msg.toLowerCase();
 
-  if (text.includes('register')) {
+    if (text.includes('register')) {
+      await sleep(500);
+      bot.chat(`/register ${PASSWORD} ${PASSWORD}`);
+    }
+
+    if (text.includes('login')) {
+      await sleep(500);
+      bot.chat(`/login ${PASSWORD}`);
+    }
+  });
+
+  bot.on('spawn', async () => {
+    console.log('Spawned');
+
+    await sleep(4000);
+
+    // اختيار الخانة الرابعة
+    bot.setQuickBarSlot(3);
+
     await sleep(500);
-    bot.chat(`/register ${PASSWORD} ${PASSWORD}`);
-  }
 
-  if (text.includes('login')) {
-    await sleep(500);
-    bot.chat('/login Funymath057356244');
-  }
-});
+    // كليك يمين بالشمعة
+    bot.activateItem();
+  });
 
-bot.on('spawn', async () => {
-  console.log('Spawned');
+  bot.on('windowOpen', async (window) => {
+    if (openedMenu) return;
+    openedMenu = true;
 
-  await sleep(4000);
+    console.log('Menu opened');
 
-  // اختيار الخانة الرابعة
-  bot.setQuickBarSlot(3);
+    await sleep(1000);
 
-  await sleep(500);
+    const grass = window.slots.find(item =>
+      item &&
+      (item.name === 'grass_block' || item.name.includes('grass'))
+    );
 
-  // كليك يمين بالشمعة
-  bot.activateItem();
-});
+    if (!grass) {
+      console.log('Grass Block not found');
+      return;
+    }
 
-bot.on('windowOpen', async (window) => {
-  if (openedMenu) return;
-  openedMenu = true;
+    await bot.clickWindow(grass.slot, 0, 0);
 
-  console.log('Menu opened');
+    await sleep(5000);
 
-  await sleep(1000);
+    bot.chat('/afk');
+    console.log('AFK enabled');
+  });
 
-  const grass = window.slots.find(item =>
-    item &&
-    (item.name === 'grass_block' ||
-     item.name.includes('grass'))
-  );
+  bot.on('kicked', reason => {
+    console.log('Kicked:', reason);
+  });
 
-  if (!grass) {
-    console.log('Grass Block not found');
-    return;
-  }
+  bot.on('error', err => {
+    console.log('Error:', err);
+  });
 
-  await bot.clickWindow(grass.slot, 0, 0);
-
-  joinedSurvival = true;
-
-  await sleep(5000);
-
-  bot.chat('/afk');
-
-  console.log('AFK enabled');
-});
-
-bot.on('kicked', reason => {
-  console.log('Kicked:', reason);
-});
-
-bot.on('error', err => {
-  console.log(err);
-});
-
-bot.on('end', () => {
-  console.log('Disconnected');
-});
-bot.on('end', () => {
+  bot.on('end', () => {
     console.log('Disconnected... reconnecting in 5 seconds');
     setTimeout(createBot, 5000);
   });
-
-  bot.on('error', (err) => {
-    console.log(err);
-  });
 }
 
+// تشغيل البوت أول مرة
 createBot();
