@@ -88,3 +88,14 @@ bot.on('error', err => {
 bot.on('end', () => {
   console.log('Disconnected');
 });
+bot.on('end', () => {
+    console.log('Disconnected... reconnecting in 5 seconds');
+    setTimeout(createBot, 5000);
+  });
+
+  bot.on('error', (err) => {
+    console.log(err);
+  });
+}
+
+createBot();
