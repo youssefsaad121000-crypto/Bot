@@ -42,11 +42,12 @@ function createBot() {
       console.log('Login confirmed, now safe to continue.');
       loggedIn = true;
 
-      // بعد تأكيد الدخول، نفذ خطواتك
+      // بعد تأكيد الدخول فقط نفذ خطواتك
+      // مثال: افتح القائمة أو نفذ أمر
       await sleep(2000);
-      bot.setQuickBarSlot(3);
-      await sleep(500);
-      bot.activateItem();
+      // bot.setQuickBarSlot(3);
+      // await sleep(500);
+      // bot.activateItem();
     }
   });
 
