@@ -3,7 +3,7 @@ const mineflayer = require('mineflayer');
 const PASSWORD = process.env.BOT_PASSWORD || 'Funymath057356244';
 const HOST = 'cookiesmp.pro';
 const PORT = 25565;
-const USERNAME = 'eneenfox';
+const USERNAME = 'abo3en'; // تم تغيير اسم المستخدم هنا
 const VERSION = '1.21.1';
 
 function sleep(ms) {
@@ -22,10 +22,11 @@ function createBot() {
     checkFootPlacement: false
   });
 
-  let inSurvival = false;
+  // تتبع حالة البوت (LOBBY أو IN_SURVIVAL)
+  let stage = 'LOBBY';
 
   bot.on('spawn', () => {
-    console.log('تم محاكاة الدخول - تعطيل الفيزياء');
+    console.log(`تم محاكاة الدخول بالحساب (${USERNAME}) - تعطيل الفيزياء لمنع الطرد`);
     bot.physicsEnabled = false; 
   });
 
@@ -44,59 +45,59 @@ function createBot() {
     }
 
     if (text.includes('successfully logged in')) {
-      console.log('تم تسجيل الدخول! جاري فتح قائمة السيرفرات...');
-      await sleep(2000);
+      console.log('تم تسجيل الدخول بنجاح! جاري كتابة أمر /survival لفتح القائمة...');
+      await sleep(2500);
 
-      // التبديل للخانة الأولى وعمل كليك يمين لفتح GUI السيرفرات
-      bot.setQuickBarSlot(0);
-      await sleep(500);
-      bot.activateItem();
+      // كتابة أمر /survival لفتح قائمة السيرفرات
+      bot.chat('/survival');
     }
   });
 
   bot.on('windowOpen', async (window) => {
-    console.log(`تم فتح نافذة: "${window.title}"`);
-    await sleep(1500);
+    console.log(`[GUI] تم فتح قائمة بعنوان: "${window.title}" (المرحلة الحالية: ${stage})`);
+    await sleep(1200);
 
-    if (!inSurvival) {
-      // 1. القائمة الخاصة باختيار السيرفرات في اللوبي
-      let targetSlot = window.slots.find(item => 
-        item && (
-          item.name.includes('grass') || 
-          (item.customName && item.customName.toLowerCase().includes('survival'))
-        )
-      );
-
-      const slotIndex = targetSlot ? targetSlot.slot : 13;
-
-      console.log(`جاري عمل [كليك يمين] على خيار Survival في الخانة (${slotIndex})...`);
+    // ----------------------------------------------------
+    // الخطوة الأولى: القائمة التي فتحت في اللوبي عن طريق أمر /survival
+    // ----------------------------------------------------
+    if (stage === 'LOBBY') {
+      console.log('جاري النقر على الخانة رقم 13 لدخول السرفايفل...');
       
-      // المعامل الثاني (1) يعني Right Click بدلاً من Left Click (0)
-      await bot.clickWindow(slotIndex, 1, 0);
+      // النقر على الخانة رقم 13
+      await bot.clickWindow(13, 0, 0);
 
-      inSurvival = true;
+      stage = 'ENTERING_SURVIVAL';
+      console.log('تم اختيار السرفايفل! انتظار 8 ثوانٍ للتحميل وتجهيز العالم...');
+      await sleep(8000);
 
-      // انتظار الانتقال التام لسيرفر السرفايفل
-      await sleep(6000);
-      await runSurvivalSequence(bot);
+      stage = 'IN_SURVIVAL';
+      await startSurvivalSequence(bot);
 
-    } else {
-      // 2. القائمة داخل السرفايفل
-      console.log('تم فتح القائمة داخل السرفايفل!');
+    // ----------------------------------------------------
+    // الخطوة الثانية: القائمة التي تفتح في السرفايفل بعد الضغط كليك يمين بالخانة 4
+    // ----------------------------------------------------
+    } else if (stage === 'IN_SURVIVAL') {
+      console.log('تم فتح القائمة داخل سيرفر Survival بنجاح!');
 
-      const firstItemSlot = window.slots.findIndex((item, idx) => item !== null && idx < window.inventoryStart);
+      // البحث عن أول أيتم موجود بالقائمة للنقر عليه
+      const itemSlot = window.slots.findIndex((item, idx) => item !== null && idx < window.inventoryStart);
 
-      if (firstItemSlot !== -1) {
-        console.log(`النقر على العنصر في الخانة ${firstItemSlot}...`);
-        await bot.clickWindow(firstItemSlot, 0, 0);
-
-        console.log('انتظار 2 ثانية...');
-        await sleep(2000);
-
-        console.log('إرسال /afk...');
-        bot.chat('/afk');
-        console.log('تمت العملية بنجاح بالكامل!');
+      if (itemSlot !== -1) {
+        console.log(`الضغط على الخانة رقم (${itemSlot}) داخل القائمة...`);
+        await bot.clickWindow(itemSlot, 0, 0);
+      } else {
+        console.log('لم يتم العثور على أيتم محدد، جاري النقر على الخانة 0 افتراضياً...');
+        await bot.clickWindow(0, 0, 0);
       }
+
+      // انتظار ثانيتين
+      console.log('انتظار 2 ثانية...');
+      await sleep(2000);
+
+      // إرسال أمر /afk
+      console.log('إرسال أمر /afk...');
+      bot.chat('/afk');
+      console.log('تمت العملية واكتملت جميع الخطوات بنجاح!');
     }
   });
 
@@ -120,22 +121,23 @@ function createBot() {
   }
 }
 
-async function runSurvivalSequence(bot) {
+async function startSurvivalSequence(bot) {
   try {
-    console.log('بدء التسلسل داخل السرفايفل...');
+    console.log('>>> بدء الخطوات داخل سيرفر السرفايفل <<<');
     
-    // الانتقال للخانة 4 في الـ Hotbar (index 3)
-    console.log('الانتقال للخانة 4 في الـ Hotbar...');
+    // 1. الانتقال للخانة 4 في الـ Hotbar (index 3)
+    console.log('1. التبديل للخانة 4 في الـ Hotbar...');
     bot.setQuickBarSlot(3);
     await sleep(1500);
 
-    // كليك يمين لفتح قائمة العنصر
-    console.log('تنفيذ كليك يمين...');
+    // 2. عمل كليك يمين لفتح قائمة الأيتم
+    console.log('2. تنفيذ [كليك يمين] لفتح قائمة الخانة 4...');
     bot.activateItem();
 
   } catch (err) {
-    console.log('خطأ أثناء تنفيذ تسلسل السرفايفل:', err.message || err);
+    console.log('حدث خطأ في تسلسل السرفايفل:', err.message || err);
   }
 }
 
 createBot();
+ 
