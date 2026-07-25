@@ -22,11 +22,10 @@ function createBot() {
     checkFootPlacement: false
   });
 
-  let loggedIn = false;
-  let sequenceStarted = false;
+  let inSurvival = false;
 
   bot.on('spawn', () => {
-    console.log('تم تسجيل الدخول للعالم - تعطيل الفيزياء لمنع الطرد');
+    console.log('تم محاكاة الدخول - تعطيل الفيزياء');
     bot.physicsEnabled = false; 
   });
 
@@ -44,42 +43,66 @@ function createBot() {
       bot.chat(`/login ${PASSWORD}`);
     }
 
-    if (text.includes('successfully logged in') && !sequenceStarted) {
-      console.log('تم تأكيد التسجيل بنجاح!');
-      loggedIn = true;
-      sequenceStarted = true;
+    if (text.includes('successfully logged in')) {
+      console.log('تم تسجيل الدخول بنجاح! جاري فتح قائمة السيرفرات...');
+      await sleep(2500);
 
-      // انتظار 3 ثوانٍ ثم الانتقال لسيرفر السرفايفل
-      await sleep(3000);
+      // محاولة إرسال الأمر مباشرة
       bot.chat('/server survival');
-
-      // البدء في تنفيذ تسلسل الخطوات
-      await runCustomSequence(bot);
+      
+      // كليك يمين بالأيتم في الخانة الأولى كخطة احتياطية لفتح GUI السيرفرات
+      bot.setQuickBarSlot(0);
+      await sleep(500);
+      bot.activateItem();
     }
   });
 
-  // التعامل مع فتح القوائم (GUI Windows)
   bot.on('windowOpen', async (window) => {
-    console.log(`تم فتح قائمة GUI بعنوان: "${window.title}"`);
-    await sleep(1000);
+    console.log(`تم فتح نافذة: "${window.title}"`);
+    await sleep(1500);
 
-    // البحث عن أول عنصر قابل للنقر داخل القائمة (تجاهل الخانات الفارغة)
-    const validItem = window.slots.find((item, index) => item !== null && index < window.inventoryStart);
+    if (!inSurvival) {
+      // 1. نحن في اللوبي وقائمة السيرفرات مفتوحة
+      // البحث عن أي عنصر يحتوي على اسم grass أو survival
+      let targetSlot = window.slots.find(item => 
+        item && (
+          item.name.includes('grass') || 
+          (item.customName && item.customName.toLowerCase().includes('survival'))
+        )
+      );
 
-    if (validItem) {
-      console.log(`جاري الضغط على العنصر: ${validItem.name} في الخانة رقم ${validItem.slot}...`);
-      await bot.clickWindow(validItem.slot, 0, 0);
+      // إذا لم يجده بالاسم، النقر على الخانة رقم 13 الموضحة بالصورة
+      const slotIndex = targetSlot ? targetSlot.slot : 13;
 
-      // انتظار ثانتين بعد النقر كما طلبت
-      console.log('انتظار 2 ثانية...');
-      await sleep(2000);
+      console.log(`جاري النقر على خيار Survival في الخانة (${slotIndex})...`);
+      await bot.clickWindow(slotIndex, 0, 0);
 
-      // إرسال أمر /afk
-      console.log('إرسال أمر /afk...');
-      bot.chat('/afk');
-      console.log('تمت العملية بنجاح ووضع البوت في حالة AFK!');
+      inSurvival = true;
+
+      // انتظار 6 ثوانٍ للانتقال التام لسيرفر السرفايفل
+      await sleep(6000);
+      await runSurvivalSequence(bot);
+
     } else {
-      console.log('لم يتم العثور على أي عنصر داخل القائمة للنقر عليه.');
+      // 2. نحن في السرفايفل وقائمة العنصر فتحت
+      console.log('تم فتح القائمة داخل السرفايفل!');
+
+      // النقر على أول عنصر موجود في القائمة
+      const firstItemSlot = window.slots.findIndex((item, idx) => item !== null && idx < window.inventoryStart);
+
+      if (firstItemSlot !== -1) {
+        console.log(`النقر على العنصر في الخانة ${firstItemSlot}...`);
+        await bot.clickWindow(firstItemSlot, 0, 0);
+
+        // انتظار ثانيتين
+        console.log('انتظار 2 ثانية...');
+        await sleep(2000);
+
+        // كتابة /afk
+        console.log('إرسال /afk...');
+        bot.chat('/afk');
+        console.log('تمت العملية بنجاح بالكامل!');
+      }
     }
   });
 
@@ -103,24 +126,22 @@ function createBot() {
   }
 }
 
-async function runCustomSequence(bot) {
+async function runSurvivalSequence(bot) {
   try {
-    // انتظار 5 ثوانٍ لضمان التحميل الكامل لعالم السرفايفل
-    await sleep(5000);
-
-    // 1. التبديل للخانة الرابعة في الـ Hotbar
+    console.log('بدء التسلسل داخل السرفايفل...');
+    
+    // التبديل للخانة 4 في الـ Hotbar (رقم 3 برمجياً)
     console.log('الانتقال للخانة 4 في الـ Hotbar...');
-    bot.setQuickBarSlot(3); 
+    bot.setQuickBarSlot(3);
     await sleep(1500);
 
-    // 2. عمل كليك يمين لتنشيط العنصر وفتح القائمة
-    console.log('تنفيذ كليك يمين لفتح القائمة...');
+    // كليك يمين لفتح القائمة
+    console.log('تنفيذ كليك يمين...');
     bot.activateItem();
 
   } catch (err) {
-    console.log('حدث خطأ أثناء تنفيذ تسلسل الأوامر:', err.message || err);
+    console.log('خطأ أثناء تنفيذ تسلسل السرفايفل:', err.message || err);
   }
 }
 
 createBot();
- 
