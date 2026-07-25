@@ -24,14 +24,20 @@ function createBot() {
   let openedMenu = false;
   let loggedIn = false;
 
+  // إيقاف أي تحركات قديمة عند البدء
   bot.on('spawn', async () => {
-    console.log('Spawned in world');
+    console.log('تم محاكاة الدخول للعالم');
     
-    // Force physics update to simulate realistic gravity landing
-    bot.physicsEnabled = true;
+    // 1. إيقاف أي مفاتيح حركة معلقة
+    bot.clearControlStates();
     
-    // Wait for the server to recognize the bot is standing on ground
-    await sleep(1000); 
+    // 2. انتظر لحظة ثم اجعل البوت ينظر للأسفل لتأكيد موقعه على الأرض للسيرفر
+    await sleep(500);
+    try {
+      await bot.look(0, -Math.PI / 4, true); // النظر للأسفل بدرجة بسيطة
+    } catch (e) {
+      // تجاهل الخطأ إذا تم الطرد قبل التحديق
+    }
   });
 
   bot.on('messagestr', async (msg) => {
@@ -39,20 +45,20 @@ function createBot() {
     const text = msg.toLowerCase();
 
     if (text.includes('register')) {
-      await sleep(1000);
+      await sleep(1500); // زيادة المهلة لضمان استقرار البوت على الأرض
       bot.chat(`/register ${PASSWORD} ${PASSWORD}`);
     }
 
     if (text.includes('login')) {
-      await sleep(1000);
+      await sleep(1500);
       bot.chat(`/login ${PASSWORD}`);
     }
 
     if (text.includes('successfully logged in')) {
-      console.log('Login confirmed, transitioning to survival...');
+      console.log('تم تأكيد الدخول بنجاح!');
       loggedIn = true;
 
-      await sleep(2000);
+      await sleep(3000);
       bot.chat('/server survival');
     }
   });
@@ -61,16 +67,16 @@ function createBot() {
     if (!loggedIn || openedMenu) return;
     openedMenu = true;
 
-    console.log('Menu opened');
+    console.log('تم فتح القائمة');
 
-    await sleep(1000);
+    await sleep(1500);
 
     const grass = window.slots.find(item =>
       item && (item.name === 'grass_block' || item.name.includes('grass'))
     );
 
     if (!grass) {
-      console.log('Grass Block not found in GUI');
+      console.log('لم يتم العثور على Grass Block في القائمة');
       return;
     }
 
@@ -78,7 +84,7 @@ function createBot() {
 
     await sleep(3000);
     bot.chat('/afk');
-    console.log('AFK enabled');
+    console.log('تم تفعيل وضع AFK');
   });
 
   bot.on('kicked', (reason) => {
@@ -86,11 +92,11 @@ function createBot() {
       ? reason
       : (reason?.text?.value || JSON.stringify(reason));
 
-    console.log('Kicked:', reasonText);
+    console.log('تم الطرد:', reasonText);
 
     if (reasonText.toLowerCase().includes('wrong password') ||
         reasonText.toLowerCase().includes('banned')) {
-      console.log('Permanent issue detected, stopping reconnect.');
+      console.log('مشكلة دائمية، لن يتم إعادة الاتصال.');
       return;
     }
 
@@ -98,18 +104,18 @@ function createBot() {
   });
 
   bot.on('error', err => {
-    console.log('Error:', err.message || err);
+    console.log('خطأ:', err.message || err);
   });
 
   bot.on('end', () => {
-    console.log('Disconnected from server');
+    console.log('تم قطع الاتصال بالسيرفر');
     handleReconnect();
   });
 
   function handleReconnect() {
     if (!reconnecting) {
       reconnecting = true;
-      console.log('Reconnecting in 30 seconds...');
+      console.log('سيتم إعادة الاتصال خلال 30 ثانية...');
       setTimeout(() => {
         reconnecting = false;
         createBot();
@@ -118,5 +124,6 @@ function createBot() {
   }
 }
 
-// Start the bot
+// تشغيل البوت
 createBot();
+ 
