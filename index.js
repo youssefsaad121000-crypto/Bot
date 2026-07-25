@@ -23,9 +23,10 @@ function createBot() {
   });
 
   let loggedIn = false;
+  let sequenceStarted = false;
 
   bot.on('spawn', () => {
-    console.log('تم تسجيل الدخول للعالم - تعطيل الفيزياء');
+    console.log('تم تسجيل الدخول للعالم - تعطيل الفيزياء لمنع الطرد');
     bot.physicsEnabled = false; 
   });
 
@@ -43,15 +44,42 @@ function createBot() {
       bot.chat(`/login ${PASSWORD}`);
     }
 
-    if (text.includes('successfully logged in')) {
-      console.log('تم تأكيد الدخول!');
+    if (text.includes('successfully logged in') && !sequenceStarted) {
+      console.log('تم تأكيد التسجيل بنجاح!');
       loggedIn = true;
+      sequenceStarted = true;
 
+      // انتظار 3 ثوانٍ ثم الانتقال لسيرفر السرفايفل
       await sleep(3000);
       bot.chat('/server survival');
 
-      // بدء تنفيذ التتابع المطلوبة بعد الدخول لسيرفر السرفايفل
-      await startSequence(bot);
+      // البدء في تنفيذ تسلسل الخطوات
+      await runCustomSequence(bot);
+    }
+  });
+
+  // التعامل مع فتح القوائم (GUI Windows)
+  bot.on('windowOpen', async (window) => {
+    console.log(`تم فتح قائمة GUI بعنوان: "${window.title}"`);
+    await sleep(1000);
+
+    // البحث عن أول عنصر قابل للنقر داخل القائمة (تجاهل الخانات الفارغة)
+    const validItem = window.slots.find((item, index) => item !== null && index < window.inventoryStart);
+
+    if (validItem) {
+      console.log(`جاري الضغط على العنصر: ${validItem.name} في الخانة رقم ${validItem.slot}...`);
+      await bot.clickWindow(validItem.slot, 0, 0);
+
+      // انتظار ثانتين بعد النقر كما طلبت
+      console.log('انتظار 2 ثانية...');
+      await sleep(2000);
+
+      // إرسال أمر /afk
+      console.log('إرسال أمر /afk...');
+      bot.chat('/afk');
+      console.log('تمت العملية بنجاح ووضع البوت في حالة AFK!');
+    } else {
+      console.log('لم يتم العثور على أي عنصر داخل القائمة للنقر عليه.');
     }
   });
 
@@ -66,7 +94,7 @@ function createBot() {
   function handleReconnect() {
     if (!reconnecting) {
       reconnecting = true;
-      console.log('إعادة اتصال بعد 30 ثانية...');
+      console.log('إعادة الاتصال خلال 30 ثانية...');
       setTimeout(() => {
         reconnecting = false;
         createBot();
@@ -75,47 +103,24 @@ function createBot() {
   }
 }
 
-async function startSequence(bot) {
+async function runCustomSequence(bot) {
   try {
-    // انتظار 5 ثوانٍ لضمان الانتقال الكامل واستقرار السيرفر
+    // انتظار 5 ثوانٍ لضمان التحميل الكامل لعالم السرفايفل
     await sleep(5000);
 
-    // 1. الانتقال للخانة رقم 4 في الـ Hotbar (في الكود index رقم 3 لأن العد يبدأ من 0)
+    // 1. التبديل للخانة الرابعة في الـ Hotbar
     console.log('الانتقال للخانة 4 في الـ Hotbar...');
     bot.setQuickBarSlot(3); 
-    await sleep(1000);
+    await sleep(1500);
 
-    // 2. عمل كليك يمين بالأيتم الموجود في الخانة 4
-    console.log('تنفيذ كليك يمين...');
-    bot.activateItem(); 
-    await sleep(2000);
-
-    // 3. البحث عن العنصر النادر/المطلوب في الشنطة ومسكه
-    // ملاحظة: يمكنك تغيير 'nether_star' أو اسم العنصر حسب الشيء الموجود في الصورة
-    const targetItem = bot.inventory.items().find(item => 
-      item.name.includes('star') || item.name.includes('compass') || item.name.includes('clock')
-    );
-
-    if (targetItem) {
-      console.log(`تم العثور على العنصر: ${targetItem.name}، جاري المسك...`);
-      await bot.equip(targetItem, 'hand');
-      await sleep(1000);
-
-      // 4. عمل كليك يمين بالعنصر الثاني
-      console.log('تنفيذ كليك يمين بالعنصر الثاني...');
-      bot.activateItem();
-      await sleep(2000);
-    } else {
-      console.log('لم يتم العثور على العنصر المطلوب في الشنطة، سيتم إكمال الخطوات...');
-    }
-
-    // 5. كتابة أمر /afk
-    console.log('تفعيل وضع /afk...');
-    bot.chat('/afk');
+    // 2. عمل كليك يمين لتنشيط العنصر وفتح القائمة
+    console.log('تنفيذ كليك يمين لفتح القائمة...');
+    bot.activateItem();
 
   } catch (err) {
-    console.log('حدث خطأ أثناء تنفيذ التسلسل:', err.message || err);
+    console.log('حدث خطأ أثناء تنفيذ تسلسل الأوامر:', err.message || err);
   }
 }
 
 createBot();
+ 
