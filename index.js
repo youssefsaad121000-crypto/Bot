@@ -19,15 +19,13 @@ function createBot() {
     username: USERNAME,
     auth: 'offline',
     version: VERSION,
-    checkFootPlacement: false // تعطيل فحص القدم لمنع أخطاء الحركة
+    checkFootPlacement: false
   });
 
-  let openedMenu = false;
   let loggedIn = false;
 
   bot.on('spawn', () => {
-    console.log('تم تسجيل الدخول للعالم - تعطيل الفيزياء لمنع الطرد');
-    // تعطيل الفيزياء تماماً لمنع إرسال movement packets مغلوطة
+    console.log('تم تسجيل الدخول للعالم - تعطيل الفيزياء');
     bot.physicsEnabled = false; 
   });
 
@@ -51,24 +49,9 @@ function createBot() {
 
       await sleep(3000);
       bot.chat('/server survival');
-    }
-  });
 
-  bot.on('windowOpen', async (window) => {
-    if (!loggedIn || openedMenu) return;
-    openedMenu = true;
-
-    await sleep(2000);
-
-    const grass = window.slots.find(item =>
-      item && (item.name === 'grass_block' || item.name.includes('grass'))
-    );
-
-    if (grass) {
-      await bot.clickWindow(grass.slot, 0, 0);
-      await sleep(4000);
-      bot.chat('/afk');
-      console.log('تم تفعيل AFK');
+      // بدء تنفيذ التتابع المطلوبة بعد الدخول لسيرفر السرفايفل
+      await startSequence(bot);
     }
   });
 
@@ -89,6 +72,49 @@ function createBot() {
         createBot();
       }, 30000);
     }
+  }
+}
+
+async function startSequence(bot) {
+  try {
+    // انتظار 5 ثوانٍ لضمان الانتقال الكامل واستقرار السيرفر
+    await sleep(5000);
+
+    // 1. الانتقال للخانة رقم 4 في الـ Hotbar (في الكود index رقم 3 لأن العد يبدأ من 0)
+    console.log('الانتقال للخانة 4 في الـ Hotbar...');
+    bot.setQuickBarSlot(3); 
+    await sleep(1000);
+
+    // 2. عمل كليك يمين بالأيتم الموجود في الخانة 4
+    console.log('تنفيذ كليك يمين...');
+    bot.activateItem(); 
+    await sleep(2000);
+
+    // 3. البحث عن العنصر النادر/المطلوب في الشنطة ومسكه
+    // ملاحظة: يمكنك تغيير 'nether_star' أو اسم العنصر حسب الشيء الموجود في الصورة
+    const targetItem = bot.inventory.items().find(item => 
+      item.name.includes('star') || item.name.includes('compass') || item.name.includes('clock')
+    );
+
+    if (targetItem) {
+      console.log(`تم العثور على العنصر: ${targetItem.name}، جاري المسك...`);
+      await bot.equip(targetItem, 'hand');
+      await sleep(1000);
+
+      // 4. عمل كليك يمين بالعنصر الثاني
+      console.log('تنفيذ كليك يمين بالعنصر الثاني...');
+      bot.activateItem();
+      await sleep(2000);
+    } else {
+      console.log('لم يتم العثور على العنصر المطلوب في الشنطة، سيتم إكمال الخطوات...');
+    }
+
+    // 5. كتابة أمر /afk
+    console.log('تفعيل وضع /afk...');
+    bot.chat('/afk');
+
+  } catch (err) {
+    console.log('حدث خطأ أثناء تنفيذ التسلسل:', err.message || err);
   }
 }
 
