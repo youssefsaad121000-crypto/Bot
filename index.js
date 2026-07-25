@@ -43,11 +43,9 @@ function createBot() {
       loggedIn = true;
 
       // بعد تأكيد الدخول فقط نفذ خطواتك
-      // مثال: افتح القائمة أو نفذ أمر
+      // مثال: أمر للانتقال من اللوبي إلى السيرفر الأساسي
       await sleep(2000);
-      // bot.setQuickBarSlot(3);
-      // await sleep(500);
-      // bot.activateItem();
+      bot.chat('/server survival'); // غيّر الأمر حسب السيرفر
     }
   });
 
@@ -123,4 +121,4 @@ function createBot() {
 }
 
 // تشغيل البوت أول مرة
-createBot();
+createBot(); 
