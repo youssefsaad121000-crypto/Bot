@@ -22,6 +22,7 @@ function createBot() {
   });
 
   let openedMenu = false;
+  let loggedIn = false;
 
   bot.on('messagestr', async (msg) => {
     console.log('[Server]:', msg);
@@ -39,17 +40,23 @@ function createBot() {
 
     if (text.includes('successfully logged in')) {
       console.log('Login confirmed, now safe to continue.');
-      // هنا تقدر تبدأ خطواتك بعد التأكد من الدخول
+      loggedIn = true;
+
+      // بعد تأكيد الدخول، نفذ خطواتك
+      await sleep(2000);
+      bot.setQuickBarSlot(3);
+      await sleep(500);
+      bot.activateItem();
     }
   });
 
-  bot.on('spawn', async () => {
+  bot.on('spawn', () => {
     console.log('Spawned');
-    // الأفضل تربط الخطوات برسالة تسجيل الدخول بدل sleep ثابت
+    // ما تعملش أي حركة هنا، استنى رسالة الدخول
   });
 
   bot.on('windowOpen', async (window) => {
-    if (openedMenu) return;
+    if (!loggedIn || openedMenu) return;
     openedMenu = true;
 
     console.log('Menu opened');
@@ -75,14 +82,12 @@ function createBot() {
   });
 
   bot.on('kicked', (reason) => {
-    // السبب ممكن يكون object، نحوله لنص
     const reasonText = typeof reason === 'string'
       ? reason
-      : JSON.stringify(reason);
+      : (reason?.text?.value || JSON.stringify(reason));
 
     console.log('Kicked:', reasonText);
 
-    // لو السبب دائم، ما تعيدش الاتصال
     if (reasonText.toLowerCase().includes('wrong password') ||
         reasonText.toLowerCase().includes('banned')) {
       console.log('Permanent issue detected, not reconnecting.');
@@ -91,11 +96,11 @@ function createBot() {
 
     if (!reconnecting) {
       reconnecting = true;
-      console.log('Reconnecting in 10 seconds...');
+      console.log('Reconnecting in 30 seconds...');
       setTimeout(() => {
         reconnecting = false;
         createBot();
-      }, 10000);
+      }, 30000);
     }
   });
 
@@ -107,11 +112,11 @@ function createBot() {
     console.log('Disconnected');
     if (!reconnecting) {
       reconnecting = true;
-      console.log('Reconnecting in 10 seconds...');
+      console.log('Reconnecting in 30 seconds...');
       setTimeout(() => {
         reconnecting = false;
         createBot();
-      }, 10000);
+      }, 30000);
     }
   });
 }
