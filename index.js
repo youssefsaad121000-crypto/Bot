@@ -44,13 +44,10 @@ function createBot() {
     }
 
     if (text.includes('successfully logged in')) {
-      console.log('تم تسجيل الدخول بنجاح! جاري فتح قائمة السيرفرات...');
-      await sleep(2500);
+      console.log('تم تسجيل الدخول! جاري فتح قائمة السيرفرات...');
+      await sleep(2000);
 
-      // محاولة إرسال الأمر مباشرة
-      bot.chat('/server survival');
-      
-      // كليك يمين بالأيتم في الخانة الأولى كخطة احتياطية لفتح GUI السيرفرات
+      // التبديل للخانة الأولى وعمل كليك يمين لفتح GUI السيرفرات
       bot.setQuickBarSlot(0);
       await sleep(500);
       bot.activateItem();
@@ -62,8 +59,7 @@ function createBot() {
     await sleep(1500);
 
     if (!inSurvival) {
-      // 1. نحن في اللوبي وقائمة السيرفرات مفتوحة
-      // البحث عن أي عنصر يحتوي على اسم grass أو survival
+      // 1. القائمة الخاصة باختيار السيرفرات في اللوبي
       let targetSlot = window.slots.find(item => 
         item && (
           item.name.includes('grass') || 
@@ -71,34 +67,32 @@ function createBot() {
         )
       );
 
-      // إذا لم يجده بالاسم، النقر على الخانة رقم 13 الموضحة بالصورة
       const slotIndex = targetSlot ? targetSlot.slot : 13;
 
-      console.log(`جاري النقر على خيار Survival في الخانة (${slotIndex})...`);
-      await bot.clickWindow(slotIndex, 0, 0);
+      console.log(`جاري عمل [كليك يمين] على خيار Survival في الخانة (${slotIndex})...`);
+      
+      // المعامل الثاني (1) يعني Right Click بدلاً من Left Click (0)
+      await bot.clickWindow(slotIndex, 1, 0);
 
       inSurvival = true;
 
-      // انتظار 6 ثوانٍ للانتقال التام لسيرفر السرفايفل
+      // انتظار الانتقال التام لسيرفر السرفايفل
       await sleep(6000);
       await runSurvivalSequence(bot);
 
     } else {
-      // 2. نحن في السرفايفل وقائمة العنصر فتحت
+      // 2. القائمة داخل السرفايفل
       console.log('تم فتح القائمة داخل السرفايفل!');
 
-      // النقر على أول عنصر موجود في القائمة
       const firstItemSlot = window.slots.findIndex((item, idx) => item !== null && idx < window.inventoryStart);
 
       if (firstItemSlot !== -1) {
         console.log(`النقر على العنصر في الخانة ${firstItemSlot}...`);
         await bot.clickWindow(firstItemSlot, 0, 0);
 
-        // انتظار ثانيتين
         console.log('انتظار 2 ثانية...');
         await sleep(2000);
 
-        // كتابة /afk
         console.log('إرسال /afk...');
         bot.chat('/afk');
         console.log('تمت العملية بنجاح بالكامل!');
@@ -130,12 +124,12 @@ async function runSurvivalSequence(bot) {
   try {
     console.log('بدء التسلسل داخل السرفايفل...');
     
-    // التبديل للخانة 4 في الـ Hotbar (رقم 3 برمجياً)
+    // الانتقال للخانة 4 في الـ Hotbar (index 3)
     console.log('الانتقال للخانة 4 في الـ Hotbar...');
     bot.setQuickBarSlot(3);
     await sleep(1500);
 
-    // كليك يمين لفتح القائمة
+    // كليك يمين لفتح قائمة العنصر
     console.log('تنفيذ كليك يمين...');
     bot.activateItem();
 
