@@ -12,6 +12,7 @@ function sleep(ms) {
 }
 
 let reconnecting = false;
+let started = false;
 
 function createBot() {
   const bot = mineflayer.createBot({
@@ -21,17 +22,34 @@ function createBot() {
     version: VERSION
   });
 
-  bot.once('spawn', async () => {
+  console.log('Connecting...');
+
+  bot.once('spawn', () => {
     reconnecting = false;
+    started = false;
+    console.log('Spawned. Waiting for verification...');
+  });
 
-    console.log('Spawned.');
+  bot.on('messagestr', async (message) => {
+    console.log('[CHAT]', message);
 
-    try {
-      await sleep(3000);
+    // غيّر هذه الرسائل لتطابق رسالة النجاح في سيرفرك
+    if (
+      !started &&
+      (
+        message.includes('Successfully verified') ||
+        message.includes('Verification complete') ||
+        message.includes('Successfully logged in')
+      )
+    ) {
+      started = true;
 
+      console.log('Verification completed.');
+
+      await sleep(1000);
       bot.chat(`/login ${PASSWORD}`);
 
-      await sleep(4000);
+      await sleep(3000);
 
       bot.setControlState('forward', true);
       await sleep(2000);
@@ -40,8 +58,6 @@ function createBot() {
       await sleep(1000);
 
       bot.chat('/warp afk');
-    } catch (err) {
-      console.error(err);
     }
   });
 
@@ -54,23 +70,15 @@ function createBot() {
   }
 
   bot.on('kicked', (reason) => {
-    console.log('========== KICKED ==========');
-    console.log(util.inspect(reason, {
-      depth: null,
-      colors: false
-    }));
+    console.log(util.inspect(reason, { depth: null, colors: false }));
     reconnect();
   });
+
+  bot.on('end', reconnect);
 
   bot.on('error', (err) => {
-    console.log('========== ERROR ==========');
-    console.error(err);
-  });
-
-  bot.on('end', () => {
-    console.log('Connection ended.');
-    reconnect();
+    console.log(err);
   });
 }
 
-createBot(); 
+createBot();
