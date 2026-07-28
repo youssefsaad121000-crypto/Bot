@@ -14,6 +14,38 @@ function sleep(ms) {
 let reconnecting = false;
 let started = false;
 
+function randomLook(bot) {
+  const yaw = Math.random() * Math.PI * 2;
+  const pitch = (Math.random() - 0.5) * Math.PI / 2;
+  bot.look(yaw, pitch, true);
+}
+
+function randomMovement(bot) {
+  const states = ['forward', 'back', 'left', 'right'];
+  const state = states[Math.floor(Math.random() * states.length)];
+
+  bot.setControlState(state, true);
+  setTimeout(() => bot.setControlState(state, false), 500 + Math.random() * 800);
+}
+
+function humanize(bot) {
+  setInterval(() => randomLook(bot), 1500 + Math.random() * 2000);
+  setInterval(() => randomMovement(bot), 3000 + Math.random() * 4000);
+
+  const msgs = [
+    "hi",
+    "laggy server lol",
+    "what's up",
+    "ok",
+    "hmm",
+    "lol"
+  ];
+
+  setInterval(() => {
+    bot.chat(msgs[Math.floor(Math.random() * msgs.length)]);
+  }, 8000 + Math.random() * 6000);
+}
+
 function createBot() {
   const bot = mineflayer.createBot({
     host: HOST,
@@ -28,12 +60,12 @@ function createBot() {
     reconnecting = false;
     started = false;
     console.log('Spawned. Waiting for verification...');
+    humanize(bot); // تشغيل السلوك البشري
   });
 
   bot.on('messagestr', async (message) => {
     console.log('[CHAT]', message);
 
-    // غيّر هذه الرسائل لتطابق رسالة النجاح في سيرفرك
     if (
       !started &&
       (
@@ -51,11 +83,9 @@ function createBot() {
 
       await sleep(3000);
 
-      bot.setControlState('forward', true);
-      await sleep(2000);
-      bot.setControlState('forward', false);
+      randomMovement(bot);
 
-      await sleep(1000);
+      await sleep(1500);
 
       bot.chat('/warp afk');
     }
