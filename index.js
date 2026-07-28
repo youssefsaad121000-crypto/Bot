@@ -1,4 +1,5 @@
 const mineflayer = require('mineflayer');
+const util = require('util');
 
 const HOST = 'zetrex.net';
 const PORT = 25565;
@@ -23,9 +24,9 @@ function createBot() {
   bot.once('spawn', async () => {
     reconnecting = false;
 
-    try {
-      console.log('Spawned.');
+    console.log('Spawned.');
 
+    try {
       await sleep(3000);
 
       bot.chat(`/login ${PASSWORD}`);
@@ -33,14 +34,12 @@ function createBot() {
       await sleep(4000);
 
       bot.setControlState('forward', true);
-      await sleep(2000); // عدّل الوقت إذا أردت المشي لمسافة مختلفة
+      await sleep(2000);
       bot.setControlState('forward', false);
 
       await sleep(1000);
 
       bot.chat('/warp afk');
-
-      console.log('Done.');
     } catch (err) {
       console.error(err);
     }
@@ -54,16 +53,24 @@ function createBot() {
     setTimeout(createBot, 5000);
   }
 
-  bot.on('end', reconnect);
-
   bot.on('kicked', (reason) => {
-    console.log('Kicked:', reason);
+    console.log('========== KICKED ==========');
+    console.log(util.inspect(reason, {
+      depth: null,
+      colors: false
+    }));
     reconnect();
   });
 
   bot.on('error', (err) => {
-    console.log('Error:', err.message);
+    console.log('========== ERROR ==========');
+    console.error(err);
+  });
+
+  bot.on('end', () => {
+    console.log('Connection ended.');
+    reconnect();
   });
 }
 
-createBot();
+createBot(); 
