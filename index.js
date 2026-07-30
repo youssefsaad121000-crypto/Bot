@@ -27,13 +27,13 @@ function createBot() {
     bot.physicsEnabled = false;
   });
 
-  // إعادة الرسبونة تلقائياً إذا قتله وحش بدون خروج البوت
+  // إعادة الرسبونة تلقائياً إذا قتله وحش
   bot.on('death', () => {
     console.log('مات البوت! جاري إعادة الرسبونة...');
     bot.respawn();
   });
 
-  // طباعة الشات فقط بدون إرسال أي أوامر تلقائية
+  // طباعة الشات فقط بدون إرسال أي أوامر تلقائية تسبب الخروج
   bot.on('messagestr', (msg) => {
     console.log('[CHAT]:', msg);
   });
@@ -57,21 +57,3 @@ createBot();
 
 // إبقاء العملية تعمل باستمرار على GitHub Actions
 setInterval(() => {}, 100000);
-  });
-
-  bot.on('error', (err) => {
-    console.log('حدث خطأ:', err);
-  });
-
-  bot.on('end', () => {
-    console.log('انقطع الاتصال بالسيرفر. إعادة الاتصال خلال 5 ثوانٍ...');
-    setTimeout(createBot, 5000);
-  });
-}
-
-// تشغيل البوت
-createBot();
-
-// إبقاء العملية تعمل باستمرار على GitHub Actions
-setInterval(() => {}, 100000);
- 
