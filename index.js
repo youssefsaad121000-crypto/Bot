@@ -15,7 +15,7 @@ function createBot() {
     checkTimeoutInterval: 60 * 1000
   });
 
-  // إيقاف المحاكاة الحركية لتجنب الطرد من السيرفر
+  // إيقاف المحاكاة الحركية لتجنب الطرد من السيرفر بسبب الحركة
   bot.physicsEnabled = false;
 
   bot.once('login', () => {
@@ -27,7 +27,7 @@ function createBot() {
     bot.physicsEnabled = false;
   });
 
-  // إعادة الرسبونة تلقائياً إذا قتله وحش (مثل العنكبوت أو السكيليتون)
+  // إعادة الرسبونة تلقائياً إذا قتله وحش بدون إغلاق الاتصال
   bot.on('death', () => {
     console.log('مات البوت! جاري إعادة الرسبونة...');
     bot.respawn();
