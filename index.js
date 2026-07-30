@@ -1,48 +1,90 @@
 const mineflayer = require('mineflayer');
 
-function createBot() {
-  const bot = mineflayer.createBot({
-    host: 'thshesh.aternos.me',
-    port: 17442,
-    username: 'GoodMiner',
-    version: '1.21.1',
-    auth: 'offline'
-  });
+const PASSWORD = 'YOUR_PASSWORD';
 
-  bot.once('login', () => {
-    console.log('تم الاتصال بالسيرفر بنجاح.');
-  });
+const bot = mineflayer.createBot({
+  host: 'thshesh.aternos.me',
+  port: 17442,
+  username: 'Kotytob',
+  auth: 'offline',
+  version: '1.21.1'
+});
 
-  bot.once('spawn', () => {
-    console.log('دَخل البوت إلى العالم بنجاح!');
-    
-    // إيقاف الفيزياء مؤقتاً لتجنب طرد الحركة غير الصالحة
-    bot.physicsEnabled = false;
-
-    setTimeout(() => {
-      bot.physicsEnabled = true;
-      console.log('تم تفعيل الفيزياء بنجاح.');
-    }, 2000);
-  });
-
-  bot.on('kicked', (reason) => {
-    console.log('تم طرد البوت. السبب:');
-    console.dir(reason, { depth: null });
-  });
-
-  bot.on('error', (err) => {
-    console.log('حدث خطأ في الاتصال:', err);
-  });
-
-  // إعادة الاتصال تلقائياً إذا انقطع الاتصال أو أُغلق السيرفر
-  bot.on('end', () => {
-    console.log('انقطع الاتصال بالسيرفر. إعادة الاتصال خلال 5 ثوانٍ...');
-    setTimeout(createBot, 5000);
-  });
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// استدعاء الدالة لتبدأ العمل
-createBot();
+let openedMenu = false;
+let joinedSurvival = false;
 
-// إبقاء العملية شغالة بدون توقف حتى ينهيها GitHub Actions بنفسه
-setInterval(() => {}, 100000);
+bot.on('messagestr', async (msg) => {
+  console.log(msg);
+
+  const text = msg.toLowerCase();
+
+  if (text.includes('register')) {
+    await sleep(500);
+    bot.chat(`/register ${PASSWORD} ${PASSWORD}`);
+  }
+
+  if (text.includes('login')) {
+    await sleep(500);
+    bot.chat(`/login ${PASSWORD}`);
+  }
+});
+
+bot.on('spawn', async () => {
+  console.log('Spawned');
+
+  await sleep(4000);
+
+  // اختيار الخانة الرابعة
+  bot.setQuickBarSlot(3);
+
+  await sleep(500);
+
+  // كليك يمين بالشمعة
+  bot.activateItem();
+});
+
+bot.on('windowOpen', async (window) => {
+  if (openedMenu) return;
+  openedMenu = true;
+
+  console.log('Menu opened');
+
+  await sleep(1000);
+
+  const grass = window.slots.find(item =>
+    item &&
+    (item.name === 'grass_block' ||
+     item.name.includes('grass'))
+  );
+
+  if (!grass) {
+    console.log('Grass Block not found');
+    return;
+  }
+
+  await bot.clickWindow(grass.slot, 0, 0);
+
+  joinedSurvival = true;
+
+  await sleep(5000);
+
+  bot.chat('/afk');
+
+  console.log('AFK enabled');
+});
+
+bot.on('kicked', reason => {
+  console.log('Kicked:', reason);
+});
+
+bot.on('error', err => {
+  console.log(err);
+});
+
+bot.on('end', () => {
+  console.log('Disconnected');
+}); 
