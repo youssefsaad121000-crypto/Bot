@@ -12,10 +12,11 @@ function createBot() {
     username: USERNAME,
     auth: 'offline',
     version: VERSION,
-    checkTimeoutInterval: 60 * 1000
+    checkTimeoutInterval: 120 * 1000,
+    // خيار حاسم لمنع الكراش الناتج عن تنسيق الشات المعقد
+    hideErrors: true 
   });
 
-  // إيقاف المحاكاة الحركية لتجنب الطرد من السيرفر بسبب الحركة
   bot.physicsEnabled = false;
 
   bot.once('login', () => {
@@ -27,18 +28,19 @@ function createBot() {
     bot.physicsEnabled = false;
   });
 
-  // إعادة الرسبونة تلقائياً إذا قتله وحش بدون إغلاق الاتصال
+  // إعادة الرسبونة تلقائياً عند الموت
   bot.on('death', () => {
     console.log('مات البوت! جاري إعادة الرسبونة...');
     bot.respawn();
   });
 
-  bot.on('kicked', (reason) => {
-    console.log('تم طرد البوت. السبب:', reason);
+  // التقاط الأخطاء غير المتوقعة (مثل أخطاء الشات) لمنع توقف السكريبت
+  bot.on('error', (err) => {
+    console.log('[تنبيه]: تم تجاوز خطأ في النظام بنجاح:', err.message);
   });
 
-  bot.on('error', (err) => {
-    console.log('حدث خطأ:', err);
+  bot.on('kicked', (reason) => {
+    console.log('تم طرد البوت. السبب:', reason);
   });
 
   bot.on('end', () => {
@@ -47,9 +49,13 @@ function createBot() {
   });
 }
 
+// معالج عام لأخطاء Node.js لمنع الـ Workflow من الـ Crash عند حدوث أي خطأ في الشات
+process.on('uncaughtException', (err) => {
+  console.log('[تجاوز كراش الشات]:', err.message);
+});
+
 // تشغيل البوت
 createBot();
 
 // إبقاء العملية تعمل باستمرار على GitHub Actions
 setInterval(() => {}, 100000);
- 
