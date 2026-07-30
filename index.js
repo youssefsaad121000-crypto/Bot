@@ -1,14 +1,9 @@
 const mineflayer = require('mineflayer');
 
-const PASSWORD = 'Funymath057356244';
 const HOST = 'thshesh.aternos.me';
 const PORT = 17442;
 const USERNAME = 'GoodMiner';
 const VERSION = '1.21.1';
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 function createBot() {
   const bot = mineflayer.createBot({
@@ -20,75 +15,33 @@ function createBot() {
     checkTimeoutInterval: 60 * 1000
   });
 
-  let openedMenu = false;
-
-  // إيقاف الفيزياء لمنع طرد الحركة (invalid_player_movement)
+  // إيقاف الفيزياء لتجنب أي مشاكل حركة عند الدخول
   bot.physicsEnabled = false;
 
-  bot.on('messagestr', async (msg) => {
-    console.log(msg);
-    const text = msg.toLowerCase();
-
-    if (text.includes('register')) {  
-      await sleep(1000);  
-      bot.chat(`/register ${PASSWORD} ${PASSWORD}`);  
-    }  
-
-    if (text.includes('login')) {  
-      await sleep(1000);  
-      bot.chat(`/login ${PASSWORD}`);  
-    }
+  bot.once('login', () => {
+    console.log('تم الاتصال بالسيرفر بنجاح.');
   });
 
-  bot.on('spawn', async () => {
-    console.log('Spawned successfully!');
-
+  bot.once('spawn', () => {
+    console.log('دَخل البوت إلى العالم وهو جاهز الآن!');
     bot.physicsEnabled = false;
-
-    await sleep(3000);
-
-    // اختيار الخانة الرابعة واستخدام العنصر
-    bot.setQuickBarSlot(3);  
-    await sleep(1000);  
-    bot.activateItem();
   });
 
-  bot.on('windowOpen', async (window) => {
-    if (openedMenu) return;
-    openedMenu = true;
-
-    console.log('Menu opened');  
-
-    await sleep(1500);  
-
-    const grass = window.slots.find(item =>  
-      item &&  
-      (item.name === 'grass_block' || item.name.includes('grass'))  
-    );  
-
-    if (!grass) {  
-      console.log('Grass Block not found');  
-      return;  
-    }  
-
-    await bot.clickWindow(grass.slot, 0, 0);  
-
-    await sleep(5000);  
-
-    bot.chat('/afk');  
-    console.log('AFK enabled');
+  // طباعة الرسائل في الكونسول فقط بدون إرسال أوامر تلقائية تسبب الطرد
+  bot.on('messagestr', (msg) => {
+    console.log('[CHAT]:', msg);
   });
 
-  bot.on('kicked', reason => {
-    console.log('Kicked:', reason);
+  bot.on('kicked', (reason) => {
+    console.log('تم طرد البوت. السبب:', reason);
   });
 
-  bot.on('error', err => {
-    console.log('Error:', err);
+  bot.on('error', (err) => {
+    console.log('حدث خطأ:', err);
   });
 
   bot.on('end', () => {
-    console.log('Disconnected... reconnecting in 5 seconds');
+    console.log('انقطع الاتصال بالسيرفر. إعادة الاتصال خلال 5 ثوانٍ...');
     setTimeout(createBot, 5000);
   });
 }
