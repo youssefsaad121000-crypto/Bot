@@ -1,22 +1,23 @@
-name: CookieSMP Bot
+name: BOT
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *"
 
 jobs:
-  run:
+  run-bot:
     runs-on: ubuntu-latest
+
+    timeout-minutes: 360
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install Dependencies
-        run: npm install
+      - run: npm install
 
-      - name: Run Bot
-        run: node index.js
+      - run: node index.js
