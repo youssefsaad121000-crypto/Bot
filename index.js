@@ -1,41 +1,48 @@
 const mineflayer = require('mineflayer');
 
-const bot = mineflayer.createBot({
-  host: 'thshesh.aternos.me',
-  port: 17442,
-  username: 'GoodMiner',
-  version: '1.21.1',
-  auth: 'offline' // تسجل كحساب مجاني/Offline
-});
+function createBot() {
+  const bot = mineflayer.createBot({
+    host: 'thshesh.aternos.me',
+    port: 17442,
+    username: 'GoodMiner',
+    version: '1.21.1',
+    auth: 'offline'
+  });
 
-// عند تسجيل الدخول الأساسي
-bot.once('login', () => {
-  console.log('تم الاتصال بالسيرفر بنجاح.');
-});
+  bot.once('login', () => {
+    console.log('تم الاتصال بالسيرفر بنجاح.');
+  });
 
-// عند رسبونة البوت داخل العالم
-bot.once('spawn', () => {
-  console.log('دَخل البوت إلى العالم بنجاح!');
-  
-  // تفعيل الفيزياء بشكل صحيح
-  bot.physicsEnabled = true;
+  bot.once('spawn', () => {
+    console.log('دَخل البوت إلى العالم بنجاح!');
+    
+    // إيقاف الفيزياء مؤقتاً لتجنب طرد الحركة غير الصالحة
+    bot.physicsEnabled = false;
 
-  // إضافة تأخير بسيط لمنع طرد البوت بسبب حركة غير صحيحة عند الدخول مباشرة
-  setTimeout(() => {
-    console.log('البوت جاهز تماماً للعمل.');
-  }, 1000);
-});
+    setTimeout(() => {
+      bot.physicsEnabled = true;
+      console.log('تم تفعيل الفيزياء بنجاح.');
+    }, 2000);
+  });
 
-// التعامل مع الأخطاء والطرد
-bot.on('kicked', (reason) => {
-  console.log('تم طرد البوت. السبب:');
-  console.dir(reason, { depth: null });
-});
+  bot.on('kicked', (reason) => {
+    console.log('تم طرد البوت. السبب:');
+    console.dir(reason, { depth: null });
+  });
 
-bot.on('error', (err) => {
-  console.log('حدث خطأ في الاتصال:', err);
-});
+  bot.on('error', (err) => {
+    console.log('حدث خطأ في الاتصال:', err);
+  });
 
-bot.on('end', () => {
-  console.log('انقطع الاتصال بالسيرفر.');
-});
+  // إعادة الاتصال تلقائياً إذا انقطع الاتصال أو أُغلق السيرفر
+  bot.on('end', () => {
+    console.log('انقطع الاتصال بالسيرفر. إعادة الاتصال خلال 5 ثوانٍ...');
+    setTimeout(createBot, 5000);
+  });
+}
+
+// استدعاء الدالة لتبدأ العمل
+createBot();
+
+// إبقاء العملية شغالة بدون توقف حتى ينهيها GitHub Actions بنفسه
+setInterval(() => {}, 100000);
