@@ -27,15 +27,10 @@ function createBot() {
     bot.physicsEnabled = false;
   });
 
-  // إعادة الرسبونة تلقائياً إذا قتله وحش
+  // إعادة الرسبونة تلقائياً إذا قتله وحش (مثل العنكبوت أو السكيليتون)
   bot.on('death', () => {
     console.log('مات البوت! جاري إعادة الرسبونة...');
     bot.respawn();
-  });
-
-  // طباعة الشات فقط بدون إرسال أي أوامر تلقائية تسبب الخروج
-  bot.on('messagestr', (msg) => {
-    console.log('[CHAT]:', msg);
   });
 
   bot.on('kicked', (reason) => {
@@ -57,3 +52,4 @@ createBot();
 
 // إبقاء العملية تعمل باستمرار على GitHub Actions
 setInterval(() => {}, 100000);
+ 
