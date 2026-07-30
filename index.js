@@ -1,9 +1,9 @@
 const mineflayer = require('mineflayer');
 
 const PASSWORD = 'Funymath057356244';
-const HOST = 'cookiesmp.pro';
-const PORT = 25565;
-const USERNAME = 'eneenfox';
+const HOST = 'thshesh.aternos.me';
+const PORT = 17442;
+const USERNAME = 'GoodMiner';
 const VERSION = '1.21.1';
 
 function sleep(ms) {
@@ -17,12 +17,12 @@ function createBot() {
     username: USERNAME,
     auth: 'offline',
     version: VERSION,
-    checkTimeoutInterval: 60 * 1000 // زيادة مهلة الاتصال لمنع الديسكونكت بسبب الـ Lag
+    checkTimeoutInterval: 60 * 1000
   });
 
   let openedMenu = false;
 
-  // إيقاف الفيزياء تماماً بمجرد بدء البوت
+  // إيقاف الفيزياء لمنع طرد الحركة (invalid_player_movement)
   bot.physicsEnabled = false;
 
   bot.on('messagestr', async (msg) => {
@@ -43,16 +43,13 @@ function createBot() {
   bot.on('spawn', async () => {
     console.log('Spawned successfully!');
 
-    // تأكيد إيقاف الفيزياء بعد الرسبونة لمنع السقوط أو إرسال الحركة
     bot.physicsEnabled = false;
 
     await sleep(3000);
 
-    // اختيار الخانة الرابعة
+    // اختيار الخانة الرابعة واستخدام العنصر
     bot.setQuickBarSlot(3);  
     await sleep(1000);  
-
-    // كليك يمين بالعنصر
     bot.activateItem();
   });
 
@@ -101,15 +98,4 @@ createBot();
 
 // إبقاء العملية تعمل باستمرار على GitHub Actions
 setInterval(() => {}, 100000);
-  // إعادة الاتصال تلقائياً إذا انقطع الاتصال أو أُغلق السيرفر
-  bot.on('end', () => {
-    console.log('انقطع الاتصال بالسيرفر. إعادة الاتصال خلال 5 ثوانٍ...');
-    setTimeout(createBot, 5000);
-  });
-}
-
-// استدعاء الدالة لتبدأ العمل
-createBot();
-
-// إبقاء العملية شغالة بدون توقف حتى ينهيها GitHub Actions بنفسه
-setInterval(() => {}, 100000);
+ 
