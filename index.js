@@ -1,97 +1,48 @@
 const mineflayer = require('mineflayer');
 
-const PASSWORD = 'Funymath057356244';
-const HOST = 'thshesh.aternos.me';
-const PORT = 17442;
-const USERNAME = 'kotytob';
-const VERSION = '1.21.1';
-
-function sleep(ms) {
-return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 function createBot() {
-const bot = mineflayer.createBot({
-host: HOST,
-port: PORT,
-username: USERNAME,
-auth: 'offline',
-version: VERSION
-});
+  const bot = mineflayer.createBot({
+    host: 'thshesh.aternos.me',
+    port: 17442,
+    username: 'GoodMiner',
+    version: '1.21.1',
+    auth: 'offline'
+  });
 
-let openedMenu = false;
+  bot.once('login', () => {
+    console.log('تم الاتصال بالسيرفر بنجاح.');
+  });
 
-bot.on('messagestr', async (msg) => {
-console.log(msg);
-const text = msg.toLowerCase();
+  bot.once('spawn', () => {
+    console.log('دَخل البوت إلى العالم بنجاح!');
+    
+    // إيقاف الفيزياء مؤقتاً لتجنب طرد الحركة غير الصالحة
+    bot.physicsEnabled = false;
 
-if (text.includes('register')) {  
-  await sleep(500);  
-  bot.chat(`/register ${PASSWORD} ${PASSWORD}`);  
-}  
+    setTimeout(() => {
+      bot.physicsEnabled = true;
+      console.log('تم تفعيل الفيزياء بنجاح.');
+    }, 2000);
+  });
 
-if (text.includes('login')) {  
-  await sleep(500);  
-  bot.chat(`/login ${PASSWORD}`);  
+  bot.on('kicked', (reason) => {
+    console.log('تم طرد البوت. السبب:');
+    console.dir(reason, { depth: null });
+  });
+
+  bot.on('error', (err) => {
+    console.log('حدث خطأ في الاتصال:', err);
+  });
+
+  // إعادة الاتصال تلقائياً إذا انقطع الاتصال أو أُغلق السيرفر
+  bot.on('end', () => {
+    console.log('انقطع الاتصال بالسيرفر. إعادة الاتصال خلال 5 ثوانٍ...');
+    setTimeout(createBot, 5000);
+  });
 }
 
-});
-
-bot.on('spawn', async () => {
-console.log('Spawned');
-
-await sleep(4000);  
-
-// اختيار الخانة الرابعة  
-bot.setQuickBarSlot(3);  
-
-await sleep(500);  
-
-// كليك يمين بالشمعة  
-bot.activateItem();
-
-});
-
-bot.on('windowOpen', async (window) => {
-if (openedMenu) return;
-openedMenu = true;
-
-console.log('Menu opened');  
-
-await sleep(1000);  
-
-const grass = window.slots.find(item =>  
-  item &&  
-  (item.name === 'grass_block' || item.name.includes('grass'))  
-);  
-
-if (!grass) {  
-  console.log('Grass Block not found');  
-  return;  
-}  
-
-await bot.clickWindow(grass.slot, 0, 0);  
-
-await sleep(5000);  
-
-bot.chat('/afk');  
-console.log('AFK enabled');
-
-});
-
-bot.on('kicked', reason => {
-console.log('Kicked:', reason);
-});
-
-bot.on('error', err => {
-console.log('Error:', err);
-});
-
-bot.on('end', () => {
-console.log('Disconnected... reconnecting in 5 seconds');
-setTimeout(createBot, 5000);
-});
-}
-
-// تشغيل البوت أول مرة
+// استدعاء الدالة لتبدأ العمل
 createBot();
+
+// إبقاء العملية شغالة بدون توقف حتى ينهيها GitHub Actions بنفسه
+setInterval(() => {}, 100000);
