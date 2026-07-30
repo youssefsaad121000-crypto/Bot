@@ -15,25 +15,48 @@ function createBot() {
     checkTimeoutInterval: 60 * 1000
   });
 
-  // إيقاف الفيزياء لتجنب أي مشاكل حركة عند الدخول
+  // إيقاف المحاكاة الحركية لتجنب الطرد من السيرفر
   bot.physicsEnabled = false;
 
   bot.once('login', () => {
-    console.log('تم الاتصال بالسيرفر بنجاح.');
+    console.log('تم تسجيل الدخول بنجاح.');
   });
 
   bot.once('spawn', () => {
-    console.log('دَخل البوت إلى العالم وهو جاهز الآن!');
+    console.log('دَخل البوت السيرفر واستقر في المكان!');
     bot.physicsEnabled = false;
   });
 
-  // طباعة الرسائل في الكونسول فقط بدون إرسال أوامر تلقائية تسبب الطرد
+  // إعادة الرسبونة تلقائياً إذا قتله وحش بدون خروج البوت
+  bot.on('death', () => {
+    console.log('مات البوت! جاري إعادة الرسبونة...');
+    bot.respawn();
+  });
+
+  // طباعة الشات فقط بدون إرسال أي أوامر تلقائية
   bot.on('messagestr', (msg) => {
     console.log('[CHAT]:', msg);
   });
 
   bot.on('kicked', (reason) => {
     console.log('تم طرد البوت. السبب:', reason);
+  });
+
+  bot.on('error', (err) => {
+    console.log('حدث خطأ:', err);
+  });
+
+  bot.on('end', () => {
+    console.log('انقطع الاتصال بالسيرفر. إعادة الاتصال خلال 5 ثوانٍ...');
+    setTimeout(createBot, 5000);
+  });
+}
+
+// تشغيل البوت
+createBot();
+
+// إبقاء العملية تعمل باستمرار على GitHub Actions
+setInterval(() => {}, 100000);
   });
 
   bot.on('error', (err) => {
