@@ -1,8 +1,15 @@
 {
-  "name": "cookiesmp-bot",
+  "name": "aternos-minecraft-bot",
   "version": "1.0.0",
+  "description": "Mineflayer Bot for thshesh.aternos.me running on GitHub Actions",
   "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
-    "mineflayer": "^4.20.1"
+    "mineflayer": "^4.23.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
