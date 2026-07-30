@@ -13,11 +13,17 @@ function createBot() {
     auth: 'offline',
     version: VERSION,
     checkTimeoutInterval: 120 * 1000,
-    // خيار حاسم لمنع الكراش الناتج عن تنسيق الشات المعقد
-    hideErrors: true 
+    hideErrors: true
   });
 
   bot.physicsEnabled = false;
+
+  // حظر حزم الشات فور وصولها لمنع خطأ prismarine-chat و EPIPE نهائياً
+  bot._client.on('packet', (data, metadata) => {
+    if (metadata.name === 'player_chat' || metadata.name === 'system_chat' || metadata.name === 'profile_less_chat') {
+      metadata.name = 'ignored_chat'; // تغيير اسم الحزمة حتى لا تعالجها المكتبة
+    }
+  });
 
   bot.once('login', () => {
     console.log('تم تسجيل الدخول بنجاح.');
@@ -28,15 +34,15 @@ function createBot() {
     bot.physicsEnabled = false;
   });
 
-  // إعادة الرسبونة تلقائياً عند الموت
   bot.on('death', () => {
     console.log('مات البوت! جاري إعادة الرسبونة...');
     bot.respawn();
   });
 
-  // التقاط الأخطاء غير المتوقعة (مثل أخطاء الشات) لمنع توقف السكريبت
   bot.on('error', (err) => {
-    console.log('[تنبيه]: تم تجاوز خطأ في النظام بنجاح:', err.message);
+    // تجاهل أخطاء EPIPE والتوصيل الناتجة عن الحزم
+    if (err.code === 'EPIPE') return;
+    console.log('[تنبيه النظام]:', err.message);
   });
 
   bot.on('kicked', (reason) => {
@@ -49,13 +55,12 @@ function createBot() {
   });
 }
 
-// معالج عام لأخطاء Node.js لمنع الـ Workflow من الـ Crash عند حدوث أي خطأ في الشات
+// تجاوز أي كراش في السكريبت
 process.on('uncaughtException', (err) => {
-  console.log('[تجاوز كراش الشات]:', err.message);
+  if (err.code === 'EPIPE') return;
+  console.log('[تم تجاوز الخطأ]:', err.message);
 });
 
-// تشغيل البوت
 createBot();
-
-// إبقاء العملية تعمل باستمرار على GitHub Actions
 setInterval(() => {}, 100000);
+ 
