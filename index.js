@@ -1,11 +1,11 @@
 const mineflayer = require('mineflayer');
 const util = require('util');
 
-const HOST = 'zetrex.net';
-const PORT = 25565;
-const USERNAME = 'eneenfox';
+const HOST = 'thshesh.aternos.me';
+const PORT = 17442;
+const USERNAME = 'BOT_';
 const VERSION = '1.21.1';
-const PASSWORD = 'Funymath057356244';
+const PASSWORD = '';
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
