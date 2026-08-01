@@ -1,7 +1,7 @@
 const mineflayer = require('mineflayer');
 
-const HOST = '62.141.62.37';
-const PORT = 53065;
+const HOST = 'thshesh.play.hosting';
+const PORT = 25590;
 const USERNAME = 'GoodMiner';
 const VERSION = '1.21.1';
 
