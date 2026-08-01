@@ -1,7 +1,7 @@
 const mineflayer = require('mineflayer');
 
-const HOST = 'thshesh.aternos.me';
-const PORT = 58757;
+const HOST = '62.141.62.37';
+const PORT = 53065;
 const USERNAME = 'GoodMiner';
 const VERSION = '1.21.1';
 
