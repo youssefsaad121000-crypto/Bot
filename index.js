@@ -1,37 +1,37 @@
 const mineflayer = require('mineflayer');
 
-const HOST = 'thshesh.falix.me';
-const PORT = 49059;
-const USERNAME = 'GoodMiner';
-const VERSION = '1.21.1';
+// إعدادات السيرفر
+const CONFIG = {
+  host: 'thshesh.falix.me',
+  port: 49059,
+  username: 'GoodMiner',
+  version: '1.21.1',
+  auth: 'offline',
+  checkTimeoutInterval: 120 * 1000,
+  hideErrors: true,
+  // إيقاف ميزة الشات لمنع كراش الحزم بالكامل
+  chatLengthLimit: 0,
+  chat: 'disabled'
+};
 
 function createBot() {
-  const bot = mineflayer.createBot({
-    host: HOST,
-    port: PORT,
-    username: USERNAME,
-    auth: 'offline',
-    version: VERSION,
-    checkTimeoutInterval: 120 * 1000,
-    hideErrors: true
-  });
-
-  bot.physicsEnabled = false;
-
-  // حظر حزم الشات فور وصولها لمنع خطأ prismarine-chat و EPIPE نهائياً
-  bot._client.on('packet', (data, metadata) => {
-    if (metadata.name === 'player_chat' || metadata.name === 'system_chat' || metadata.name === 'profile_less_chat') {
-      metadata.name = 'ignored_chat'; // تغيير اسم الحزمة حتى لا تعالجها المكتبة
-    }
-  });
+  const bot = mineflayer.createBot(CONFIG);
 
   bot.once('login', () => {
     console.log('تم تسجيل الدخول بنجاح.');
   });
 
   bot.once('spawn', () => {
-    console.log('دَخل البوت السيرفر واستقر في المكان!');
+    console.log('دخل البوت السيرفر واستقر في المكان!');
     bot.physicsEnabled = false;
+
+    // قفزة خفيفة كل 3 دقائق لمنع الطرد بسبب الـ AFK
+    setInterval(() => {
+      if (bot && bot.entity) {
+        bot.setControlState('jump', true);
+        setTimeout(() => bot.setControlState('jump', false), 500);
+      }
+    }, 180000);
   });
 
   bot.on('death', () => {
@@ -40,8 +40,8 @@ function createBot() {
   });
 
   bot.on('error', (err) => {
-    // تجاهل أخطاء EPIPE والتوصيل الناتجة عن الحزم
-    if (err.code === 'EPIPE') return;
+    // تجاهل أخطاء الانقطاع الشائعة
+    if (err.code === 'EPIPE' || err.code === 'ECONNRESET') return;
     console.log('[تنبيه النظام]:', err.message);
   });
 
@@ -50,18 +50,15 @@ function createBot() {
   });
 
   bot.on('end', () => {
-    console.log('انقطع الاتصال بالسيرفر. إعادة الاتصال خلال 5 ثوانٍ...');
-    setTimeout(createBot, 5000);
+    console.log('انقطع الاتصال بالسيرفر. إعادة الاتصال خلال 10 ثوانٍ...');
+    setTimeout(createBot, 10000);
   });
 }
 
-// تجاوز أي كراش في السكريبت
+// تجاوز الأخطاء غير المتوقعة
 process.on('uncaughtException', (err) => {
-  if (err.code === 'EPIPE') return;
+  if (err.code === 'EPIPE' || err.code === 'ECONNRESET') return;
   console.log('[تم تجاوز الخطأ]:', err.message);
 });
 
 createBot();
-setInterval(() => {}, 100000);
-
-
